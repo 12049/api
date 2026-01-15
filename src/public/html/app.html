@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark-Api</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<style>
+body {
+  margin: 0;
+  font-family: "Cairo", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  z-index: -1;
+  object-fit: cover;
+  object-position: center;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.form-box {
+  background: rgba(0, 0, 0, 0.8);
+  position: relative;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(0, 200, 255, 0.7);
+  text-align: center;
+  width: 280px;
+  max-width: 90%;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 1s ease, electricGlow 3s infinite;
+  opacity: 1; /* ظاهر دائمًا */
+  visibility: visible; /* ظاهر دائمًا */
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.form-box.hide {
+  opacity: 0; /* تختفي تدريجيًا */
+  visibility: hidden;
+}
+
+.card-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 2px solid #00e0ff;
+  box-shadow: 0 0 10px #00e0ff, 0 0 20px #00e0ff inset;
+  overflow: hidden;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  animation: electricGlow 3s infinite;
+}
+
+.card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.form-box h2 {
+  margin-bottom: 15px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #00e0ff;
+  text-shadow: 0 0 8px #00e0ff;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  transition: 0.3s;
+}
+
+.input-group i {
+  color: #00e0ff;
+  margin-left: 8px;
+  transition: 0.3s;
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.6);
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  font-size: 13px;
+  padding: 6px;
+  border-radius: 5px;
+}
+
+.input-group input::placeholder {
+  color: #ccc;
+}
+
+.input-group:focus-within {
+  box-shadow: 0 0 12px #00e0ff;
+  background: rgba(0, 200, 255, 0.15);
+}
+
+.input-group:focus-within i {
+  color: #fff;
+  animation: pulseIcon 1s infinite;
+  text-shadow: 0 0 12px #00e0ff, 0 0 24px #00e0ff;
+}
+
+.form-box button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #00e0ff, #0077ff);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.form-box button:hover {
+  background: linear-gradient(90deg, #0077ff, #00e0ff);
+  box-shadow: 0 0 15px #00e0ff;
+}
+
+.hidden { display: none; }
+
+.message-box, .welcome-box {
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  width: 280px;
+  max-width: 90%;
+  text-align: center;
+  position: fixed; /* منتصف الشاشة */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  z-index: 1000;
+  background: rgba(0,0,0,0.85);
+  animation: fadeIn 0.3s ease;
+}
+
+.message-box.error { 
+  color: #ff5555; 
+  box-shadow: 0 0 15px #ff5555; 
+}
+
+.welcome-box { 
+  color: #00ff99; 
+  box-shadow: 0 0 15px #00ff99; 
+}
+
+/* Custom Select Discord Style */
+.custom-select {
+  position: relative;
+  flex: 1;
+  background: rgba(0,0,0,0.2);
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  user-select: none;
+}
+
+.custom-select .selected {
+  padding: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.custom-select .options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(10,10,10,0.95);
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 0 0 5px 5px;
+  z-index: 5;
+  box-shadow: 0 0 10px #00e0ff;
+}
+
+.custom-select .options li {
+  padding: 8px 10px;
+  list-style: none;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-select .options li:hover {
+  background: rgba(0, 200, 255, 0.2);
+  color: #00e0ff;
+  border-radius: 5px;
+}
+
+/* Animations */
+@keyframes fadeIn { 
+  from { opacity:0; transform:scale(0.9);}
+  to { opacity:1; transform:scale(1);}
+}
+@keyframes pulseIcon {
+  0%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.2);opacity:0.8;}
+  100%{transform:scale(1);opacity:1;}
+}
+@keyframes electricGlow {
+  0%,100%{box-shadow:0 0 25px rgba(0,200,255,0.7);}
+  50%{box-shadow:0 0 45px rgba(0,200,255,1),0 0 70px rgba(0,200,255,0.6);}
+}
+/* === البوبيت الرئيسي === */
+.popup-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(0,0,0,0.85);
+  color: #00e0ff;
+  padding: 25px 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #00e0ff, 0 0 40px rgba(0,224,255,0.5) inset;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInScale 0.5s forwards;
+  font-family: "Cairo", sans-serif;
+}
+
+/* رسالة الترحيب */
+.popup-message {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 0 0 8px #00e0ff, 0 0 15px rgba(0,224,255,0.5);
+}
+
+/* الكاردات */
+.popup-cards {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.popup-cards .card {
+  background: rgba(0,0,0,0.75);
+  border: 2px solid #00e0ff;
+  padding: 15px 20px;
+  border-radius: 12px;
+  min-width: 120px;
+  text-align: center;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.popup-cards .card h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #00e0ff;
+  text-shadow: 0 0 6px #00e0ff;
+}
+
+.popup-cards .card p {
+  margin: 0;
+  font-size: 13px;
+  color: #00fff7;
+  text-shadow: 0 0 4px #00fff7;
+}
+
+/* === Animations === */
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === إخفاء الفورمات تدريجيًا === */
+.form-box.hide {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+</style>
+<body>
+
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="https://files.catbox.moe/t1r7ws.mp4" type="video/mp4">
+  </video>
+
+  <div class="container">
+
+    <!-- رسائل الخطأ/النجاح -->
+    <div id="message-box" class="message-box hidden"></div>
+
+    <!-- الترحيب -->
+    <div id="welcome-box" class="welcome-box hidden"></div>
+
+    <!-- تسجيل الدخول -->
+    <div class="form-box" id="login-box">
+      <div class="card-avatar">
+        <img src="https://files.catbox.moe/rx2tvh.jpg" alt="Avatar">
+      </div>
+      <h2>تسجيل الدخول</h2>
+      <div class="input-group">
+        <i class="fa-solid fa-envelope"></i>
+        <input type="email" id="login-email" placeholder="البريد الإلكتروني" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="login-password" placeholder="كلمة المرور" required>
+      </div>
+      <button type="button" onclick="login()">دخول</button>
+      <p>ليس لديك حساب؟
+        <a href="javascript:void(0)" onclick="toggleForms()">سجّل الآن</a>
+      </p>
+    </div>
+
+    <!-- تسجيل جديد -->
+    <div class="form-box hidden" id="register-box">
+      <div class="card-avatar">
+        <img src="https://files.catbox.moe/rx2tvh.jpg" alt="Avatar">
+      </div>
+      <h2>إنشاء حساب</h2>
+      <div class="input-group">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="reg-name" placeholder="الاسم الكامل" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-flag"></i>
+        <div class="custom-select" id="country-select">
+          <div class="selected">اختر الدولة</div>
+          <ul class="options hidden" id="country-options"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-phone"></i>
+        <input type="text" id="reg-phone" placeholder="رقم الهاتف" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-envelope"></i>
+        <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="reg-password" placeholder="كلمة المرور" required>
+      </div>
+      <button type="button" onclick="register()">تسجيل</button>
+      <p>هل لديك حساب بالفعل؟
+        <a href="javascript:void(0)" onclick="toggleForms()">سجّل دخول</a>
+      </p>
+    </div>
+  </div>
+<script type="module">
+  const API_URL = "https://dark-api-x.vercel.app/api/firebase"; // مسار الروتز
+  const API_KEY = "drk_iARHZmYf0ODK8m3WuDmKl0K9nHSMQZ35Zkwa"; // API Key
+
+  // ======= الرسائل =======
+  function showMessage(msg, type="error") {
+    const messageBox = document.getElementById("message-box");
+    const loginBox = document.getElementById("login-box");
+    const registerBox = document.getElementById("register-box");
+    messageBox.textContent = msg;
+    messageBox.className = type==="error" ? "message-box error" : "message-box success";
+    messageBox.style.display = "block";
+
+    loginBox.style.visibility = "hidden";
+    registerBox.style.visibility = "hidden";
+
+    setTimeout(()=>{
+      messageBox.style.display = "none";
+      loginBox.style.visibility = "visible";
+      registerBox.style.visibility = "visible";
+    }, 3000);
+  }
+
+  // ======= التبديل بين الكاردين =======
+  function toggleForms() {
+    const loginBox = document.getElementById("login-box");
+    const registerBox = document.getElementById("register-box");
+    loginBox.classList.toggle("hidden");
+    registerBox.classList.toggle("hidden");
+  }
+
+  // ======= قائمة الدول =======
+  const countriesList = [
+    { "name": "مصر", "code": "20", "flag": "🇪🇬" },
+    { "name": "السعودية", "code": "966", "flag": "🇸🇦" },
+    { "name": "الإمارات", "code": "971", "flag": "🇦🇪" },
+    { "name": "الكويت", "code": "965", "flag": "🇰🇼" },
+    { "name": "قطر", "code": "974", "flag": "🇶🇦" },
+    { "name": "البحرين", "code": "973", "flag": "🇧🇭" },
+    { "name": "عمان", "code": "968", "flag": "🇴🇲" },
+    { "name": "اليمن", "code": "967", "flag": "🇾🇪" },
+    { "name": "العراق", "code": "964", "flag": "🇮🇶" },
+    { "name": "الأردن", "code": "962", "flag": "🇯🇴" },
+    { "name": "لبنان", "code": "961", "flag": "🇱🇧" },
+    { "name": "سوريا", "code": "963", "flag": "🇸🇾" },
+    { "name": "فلسطين", "code": "970", "flag": "🇵🇸" },
+    { "name": "ليبيا", "code": "218", "flag": "🇱🇾" },
+    { "name": "تونس", "code": "216", "flag": "🇹🇳" },
+    { "name": "الجزائر", "code": "213", "flag": "🇩🇿" },
+    { "name": "المغرب", "code": "212", "flag": "🇲🇦" },
+    { "name": "موريتانيا", "code": "222", "flag": "🇲🇷" },
+    { "name": "السودان", "code": "249", "flag": "🇸🇩" },
+    { "name": "جيبوتي", "code": "253", "flag": "🇩🇯" },
+    { "name": "الصومال", "code": "252", "flag": "🇸🇴" },
+    { "name": "جزر القمر", "code": "269", "flag": "🇰🇲" }
+  ];
+
+  const countrySelect = document.getElementById("country-select");
+  const selectedDiv = countrySelect.querySelector(".selected");
+  const optionsList = document.getElementById("country-options");
+  const phoneInput = document.getElementById("reg-phone");
+
+  function populateCountries() {
+    countriesList.sort((a,b)=>a.name.localeCompare(b.name));
+    optionsList.innerHTML = "";
+    countriesList.forEach(c => {
+      const li = document.createElement("li");
+      li.dataset.name = c.name;
+      li.dataset.code = c.code;
+      li.dataset.flag = c.flag;
+      li.textContent = `${c.flag} ${c.name} (+${c.code})`;
+      li.addEventListener("click", () => {
+        selectedDiv.textContent = `${c.flag} ${c.name}`;
+        phoneInput.value = `+${c.code}`;
+        phoneInput.dataset.name = c.name;
+        phoneInput.dataset.code = c.code;
+        phoneInput.dataset.flag = c.flag;
+        optionsList.classList.add("hidden");
+      });
+      optionsList.appendChild(li);
+    });
+
+    if(countriesList.length > 0){
+      const first = countriesList[0];
+      selectedDiv.textContent = `${first.flag} ${first.name}`;
+      phoneInput.value = `+${first.code}`;
+      phoneInput.dataset.name = first.name;
+      phoneInput.dataset.code = first.code;
+      phoneInput.dataset.flag = first.flag;
+    }
+  }
+  populateCountries();
+  selectedDiv.addEventListener("click", () => optionsList.classList.toggle("hidden"));
+  document.addEventListener("click", (e) => { if(!countrySelect.contains(e.target)) optionsList.classList.add("hidden"); });
+
+  // ======= تسجيل جديد =======
+  async function register() {
+    const name = document.getElementById("reg-name").value.trim();
+    const phone = phoneInput.value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value.trim();
+
+    const country = {
+      name: phoneInput.dataset.name || "",
+      code: phoneInput.dataset.code || "",
+      flag: phoneInput.dataset.flag || ""
+    };
+
+    if (!name || !phone || !email || !password) {
+      showMessage("❌ الرجاء تعبئة جميع الحقول", "error");
+      return;
+    }
+
+    const payload = { name, phone, email, password, country };
+
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showPopup(`Welcome ${name}!\nOn the dark API platform`, [
+          { title: "𝐑𝐀𝐃𝐈𝐎 𝐃𝐄𝐌𝐎𝐍", subtitle: "Developer" },
+          { title: "IZANA", subtitle: "Co-Developer" }
+        ]);
+        toggleForms();
+      } else {
+        showMessage(data.message, "error");
+      }
+
+    } catch (err) {
+      console.error(err);
+      showMessage("❌ حدث خطأ أثناء التسجيل", "error");
+    }
+  }
+
+  // ======= تسجيل دخول =======
+  async function login() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!email || !password) {
+      showMessage("❌ الرجاء إدخال البريد الإلكتروني وكلمة المرور", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY
+        },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showPopup(`Welcome ${data.userName || "User"}!\nOn the dark API platform`, [
+          { title: "𝐑𝐀𝐃𝐈𝐎 𝐃𝐄𝐌𝐎𝐍", subtitle: "Developer" },
+          { title: "IZANA", subtitle: "Co-Developer" }
+        ]);
+      } else {
+        showMessage(data.message || "❌ البريد أو كلمة المرور غير صحيحة", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage("❌ حدث خطأ أثناء تسجيل الدخول", "error");
+    }
+  }
+
+  // ======= البوبيت =======
+  function showPopup(message, cards=[]) {
+    const loginBox = document.getElementById("login-box");
+    const registerBox = document.getElementById("register-box");
+    loginBox.classList.add("hide");
+    registerBox.classList.add("hide");
+
+    const popup = document.createElement("div");
+    popup.className = "popup-box";
+    popup.style.fontFamily = "'Cairo', sans-serif";
+    popup.innerHTML = `
+      <div class="popup-message">${message.replace(/\n/g,"<br>")}</div>
+      <div class="popup-cards">
+        ${cards.map(c => `<div class="card"><h3>${c.title}</h3><p>${c.subtitle}</p></div>`).join("")}
+      </div>
+    `;
+    document.body.appendChild(popup);
+    popup.style.animation = "fadeIn 0.5s ease";
+
+    // إزالة البوبيت بعد 5 ثواني والتحويل
+    setTimeout(() => {
+      popup.remove();
+      window.location.href = "/home";
+    }, 5000);
+  }
+
+  window.toggleForms = toggleForms;
+  window.register = register;
+  window.login = login;
+</script>
+</body>
+</html>
