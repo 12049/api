@@ -44,21 +44,19 @@ async function zahanatChat(message, opts = { userId: 436, conversationId: 0, web
         for (const l of lines) {
           const jsonStr = l.replace(/^data:\s*/, "").trim();
           if (!jsonStr) continue;
+
           try {
             const obj = JSON.parse(jsonStr);
-            if (obj.content) msgs.push(obj.content);
+            if (obj.chunk) msgs.push(obj.chunk);
             else if (obj.message) msgs.push(obj.message);
-            else if (obj.text) msgs.push(obj.text);
-            else msgs.push(jsonStr);
-          } catch {
-            msgs.push(jsonStr);
-          }
+            else if (obj.content) msgs.push(obj.content);
+          } catch {}
         }
 
         resolve({
           status: res.status,
           success: res.status === 200,
-          message: msgs.join("") || buffer.trim() || "No response received",
+          message: msgs.join("").trim(),
           raw: lines
         });
       });
