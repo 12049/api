@@ -24,15 +24,54 @@ async function zahanatChat(message, opts = { userId: 436, conversationId: 0, web
         conversation_id: opts.conversationId,
         web_search: opts.webSearch
       },
-      { headers: HEADERS }
+      {
+        headers: HEADERS,
+        responseType: "stream"
+      }
     );
 
-    return {
-      status: res.status,
-      success: res.status === 200,
-      message: res.data?.message || res.data?.content || "",
-      fullResponse: res.data
-    };
+    let fullData = "";
+    
+    return new Promise((resolve, reject) => {
+      res.data.on("data", chunk => {
+        fullData += chunk.toString();
+      });
+
+      res.data.on("end", () => {
+        try {
+          // فصل الردود حسب الأسطر وجمع الـ chunks
+          const lines = fullData.split('\n').filter(line => line.trim());
+          let completeMessage = "";
+          
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              const jsonStr = line.substring(5).trim();
+              if (jsonStr) {
+                try {
+                  const data = JSON.parse(jsonStr);
+                  if (data.chunk) {
+                    completeMessage += data.chunk;
+                  }
+                } catch (e) {
+                  // تجاهل JSON غير صالح
+                }
+              }
+            }
+          }
+          
+          resolve({
+            status: res.status,
+            success: res.status === 200,
+            message: completeMessage.trim(),
+            raw: fullData
+          });
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      res.data.on("error", reject);
+    });
 
   } catch (err) {
     return {
@@ -49,20 +88,34 @@ router.get("/", async (req, res) => {
 
   if (!q) {
     return res.json({
-      status: true,
-      creator: "Dark-Team",
-      message: "📌 أرسل بـ ?q="
+      status: false,
+      message: "📌 أرسل سؤالك بـ ?q=نص_السؤال"
     });
   }
 
-  const reply = await zahanatChat(q);
-  
-  // هنا ترجع الرد بشكل مباشر وكلام عادي
-  return res.json({
-    status: reply.success,
-    response: reply.message,
-    apiStatus: reply.status
-  });
+  try {
+    const reply = await zahanatChat(q);
+    
+    if (reply.success && reply.message) {
+      return res.json({
+        status: true,
+        response: reply.message
+      });
+    } else {
+      return res.json({
+        status: false,
+        response: "❌ لم أتمكن من الحصول على رد",
+        error: reply.error
+      });
+    }
+    
+  } catch (error) {
+    return res.json({
+      status: false,
+      response: "❌ حدث خطأ في الخادم",
+      error: error.message
+    });
+  }
 });
 
 export default router;
